@@ -38,12 +38,16 @@ def export_properties(db: Session) -> list[dict]:
     return [
         {
             "id": item.id,
-            "finalidade": item.finalidade,
+            "num_bloco": item.num_bloco,
             "num_inscricao": item.num_inscricao,
+            "cod_endloc_logradouro": item.cod_endloc_logradouro,
             "logradouro": item.nme_endloc_logradouro,
             "numero": item.num_endloc_endereco,
             "unidade": item.num_endloc_unidade,
             "bairro": item.nme_endloc_bairro_cdl,
+            "finalidade": item.finalidade,
+            "rh_nome": item.rh_nome,
+            "rh_valor": item.rh_valor,
             "area_total": item.area_total,
             "area_privativa": item.area_privativa,
             "finalidade_oferta": item.finalidade_oferta,
@@ -59,8 +63,8 @@ def export_properties(db: Session) -> list[dict]:
             "codigo": item.codigo,
             "infra": item.infra,
             "padrao": item.padrao,
+            "conservacao": item.conservacao,
             "vaga": item.vaga,
-            "origem": item.origem,
         }
         for item in items
     ]

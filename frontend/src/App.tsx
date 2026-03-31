@@ -9,14 +9,141 @@ import {
 import type { CadastroBaseRecord, Property, PropertyDraft } from "./types";
 import logoCdA from "./assets/cdA_logo_transparent.png";
 
+const CONSERVACAO_OPTIONS = [
+  {
+    categoria: "Otimo",
+    classes: ["A", "B"],
+    explicacao: [
+      "Imovel novo ou quase novo",
+      "Sem danos aparentes",
+      "Nao precisa de reparos",
+      "Tudo funcionando normalmente",
+      "Pode exigir no maximo pintura leve"
+    ]
+  },
+  {
+    categoria: "Bom",
+    classes: ["C", "D"],
+    explicacao: [
+      "Imovel bem conservado",
+      "Apresenta sinais normais de uso",
+      "Pode precisar de pequenos reparos pontuais",
+      "Pode ter leves fissuras ou desgaste superficial",
+      "Nao compromete o uso do imovel"
+    ]
+  },
+  {
+    categoria: "Regular",
+    classes: ["E"],
+    explicacao: [
+      "Precisa de manutencao simples mais ampla",
+      "Pode necessitar pintura interna e externa",
+      "Pode ter fissuras superficiais mais visiveis",
+      "Pode exigir revisao hidraulica ou eletrica",
+      "Continua funcional para uso"
+    ]
+  },
+  {
+    categoria: "Ruim",
+    classes: ["F", "G", "H"],
+    explicacao: [
+      "Precisa de reparos importantes ou generalizados",
+      "Pode comprometer estetica, funcionalidade ou seguranca",
+      "Pode exigir troca de revestimentos, telhado ou instalacoes",
+      "Pode envolver problemas estruturais",
+      "Nos casos mais graves, requer reforma pesada ou quase total"
+    ]
+  }
+] as const;
+
+const CLASSIFICATION_GUIDES = {
+  infra: {
+    titulo: "Infra",
+    descricao: "Espaco reservado para os criterios de infraestrutura.",
+    status: "Em breve",
+    blocos: [
+      {
+        titulo: "Sem guia ainda",
+        itens: [
+          "As explicacoes de classificacao de Infra serao adicionadas aqui futuramente.",
+          "O campo continua disponivel para selecao manual."
+        ]
+      }
+    ]
+  },
+  padrao: {
+    titulo: "Padrao",
+    descricao: "Espaco reservado para os criterios de padrao construtivo.",
+    status: "Em breve",
+    blocos: [
+      {
+        titulo: "Sem guia ainda",
+        itens: [
+          "As explicacoes de classificacao de Padrao serao adicionadas aqui futuramente.",
+          "O campo continua disponivel para selecao manual."
+        ]
+      }
+    ]
+  },
+  conservacao: {
+    titulo: "Conservacao",
+    descricao: "Leia os textos e escolha a categoria mais adequada ao estado atual do imovel.",
+    status: "Disponivel",
+    blocos: CONSERVACAO_OPTIONS.map((option) => ({
+      titulo: `${option.categoria} | Classes ${option.classes.join(", ")}`,
+      valor: option.categoria,
+      itens: option.explicacao
+    }))
+  },
+  vaga: {
+    titulo: "Vaga",
+    descricao: "Considere a existencia de vaga e a facilidade de estacionamento no entorno.",
+    status: "Disponivel",
+    blocos: [
+      {
+        titulo: "Sim",
+        valor: "Sim",
+        itens: [
+          "O imovel possui vaga propria ou vaga disponivel no empreendimento."
+        ]
+      },
+      {
+        titulo: "Nao | estacionamento facilitado",
+        valor: "Nao - facilidade de estacionamento",
+        itens: [
+          "O imovel nao possui vaga.",
+          "Mesmo assim, a regiao oferece facilidade para estacionar."
+        ]
+      },
+      {
+        titulo: "Nao | estacionamento dificil",
+        valor: "Nao - dificuldade de estacionamento",
+        itens: [
+          "O imovel nao possui vaga.",
+          "Ha dificuldade de encontrar estacionamento na regiao."
+        ]
+      }
+    ]
+  }
+} as const;
+
 const initialForm: PropertyDraft = {
   titulo: null,
   finalidade: "RESIDENCIAL",
+  num_bloco: null,
   num_inscricao: null,
+  cod_endloc_logradouro: null,
   nme_endloc_logradouro: null,
   num_endloc_endereco: null,
   num_endloc_unidade: null,
   nme_endloc_bairro_cdl: null,
+  rh_nome: null,
+  rh_valor: null,
+  coord_x: null,
+  coord_y: null,
+  ano_exercicio: null,
+  num_versao: null,
+  idf_reg_regiao_homogenea: null,
   area_total: null,
   area_privativa: null,
   finalidade_oferta: null,
@@ -32,6 +159,7 @@ const initialForm: PropertyDraft = {
   codigo: "",
   infra: "",
   padrao: "",
+  conservacao: "",
   vaga: "",
   origem: "manual",
 };
@@ -47,6 +175,8 @@ function App() {
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [activeClassifier, setActiveClassifier] =
+    useState<keyof typeof CLASSIFICATION_GUIDES>("conservacao");
   const [openSections, setOpenSections] = useState({
     busca: true,
     cadastro: true,
@@ -80,11 +210,20 @@ function App() {
     setForm((current) => ({
       ...current,
       finalidade: record.des_finalidade || current.finalidade,
+      num_bloco: record.num_bloco,
       num_inscricao: record.num_inscricao,
+      cod_endloc_logradouro: record.cod_endloc_logradouro,
       nme_endloc_logradouro: record.nme_endloc_logradouro,
       num_endloc_endereco: record.num_endloc_endereco,
       num_endloc_unidade: record.num_endloc_unidade,
       nme_endloc_bairro_cdl: record.nme_endloc_bairro_cdl,
+      rh_nome: record.rh_nome,
+      rh_valor: record.rh_valor,
+      coord_x: record.coord_x,
+      coord_y: record.coord_y,
+      ano_exercicio: record.ano_exercicio,
+      num_versao: record.num_versao,
+      idf_reg_regiao_homogenea: record.idf_reg_regiao_homogenea,
       area_total: record.area_territorial,
       area_privativa: record.area_construida,
       latitude: record.latitude,
@@ -148,6 +287,8 @@ function App() {
   function toggleSection(section: keyof typeof openSections) {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   }
+
+  const activeGuide = CLASSIFICATION_GUIDES[activeClassifier];
 
   return (
     <div className="page">
@@ -260,123 +401,238 @@ function App() {
                   Os dados encontrados podem ser ajustados livremente antes do salvamento. A base
                   auxiliar permanece intacta.
                 </div>
-                <div className="form-grid">
-                <label>
-                  Finalidade cadastro
-                  <input
-                    value={form.finalidade}
-                    onChange={(event) => updateField("finalidade", event.target.value)}
-                    placeholder="Residencial, apartamento..."
-                  />
-                </label>
+                <div className="form-grid cadastro-grid">
+                  <label>
+                    NUM_BLOCO
+                    <input
+                      value={form.num_bloco ?? ""}
+                      onChange={(event) => updateField("num_bloco", event.target.value || null)}
+                    />
+                  </label>
 
-                <label>
-                  Numero de inscricao
-                  <input
-                    value={form.num_inscricao ?? ""}
-                    onChange={(event) => updateField("num_inscricao", event.target.value || null)}
-                  />
-                </label>
+                  <label>
+                    NUM_INSCRICAO
+                    <input
+                      value={form.num_inscricao ?? ""}
+                      onChange={(event) => updateField("num_inscricao", event.target.value || null)}
+                    />
+                  </label>
 
-                <label>
-                  Logradouro
-                  <input
-                    value={form.nme_endloc_logradouro ?? ""}
-                    onChange={(event) =>
-                      updateField("nme_endloc_logradouro", event.target.value || null)
-                    }
-                  />
-                </label>
+                  <label>
+                    COD_ENDLOC_LOGRADOURO
+                    <input
+                      value={form.cod_endloc_logradouro ?? ""}
+                      onChange={(event) =>
+                        updateField("cod_endloc_logradouro", event.target.value || null)
+                      }
+                    />
+                  </label>
 
-                <label>
-                  Numero
-                  <input
-                    value={form.num_endloc_endereco ?? ""}
-                    onChange={(event) =>
-                      updateField("num_endloc_endereco", event.target.value || null)
-                    }
-                  />
-                </label>
+                  <label>
+                    NME_ENDLOC_LOGRADOURO
+                    <input
+                      value={form.nme_endloc_logradouro ?? ""}
+                      onChange={(event) =>
+                        updateField("nme_endloc_logradouro", event.target.value || null)
+                      }
+                    />
+                  </label>
 
-                <label>
-                  Unidade
-                  <input
-                    value={form.num_endloc_unidade ?? ""}
-                    onChange={(event) =>
-                      updateField("num_endloc_unidade", event.target.value || null)
-                    }
-                  />
-                </label>
+                  <label>
+                    NUM_ENDLOC_ENDERECO
+                    <input
+                      value={form.num_endloc_endereco ?? ""}
+                      onChange={(event) =>
+                        updateField("num_endloc_endereco", event.target.value || null)
+                      }
+                    />
+                  </label>
 
-                <label>
-                  Bairro
-                  <input
-                    value={form.nme_endloc_bairro_cdl ?? ""}
-                    onChange={(event) =>
-                      updateField("nme_endloc_bairro_cdl", event.target.value || null)
-                    }
-                  />
-                </label>
+                  <label>
+                    NUM_ENDLOC_UNIDADE
+                    <input
+                      value={form.num_endloc_unidade ?? ""}
+                      onChange={(event) =>
+                        updateField("num_endloc_unidade", event.target.value || null)
+                      }
+                    />
+                  </label>
 
-                <label>
-                  Latitude
-                  <input
-                    type="number"
-                    step="0.000001"
-                    value={form.latitude ?? ""}
-                    onChange={(event) =>
-                      updateField(
-                        "latitude",
-                        event.target.value ? Number(event.target.value) : null
-                      )
-                    }
-                  />
-                </label>
+                  <label>
+                    NME_ENDLOC_BAIRRO_CDL
+                    <input
+                      value={form.nme_endloc_bairro_cdl ?? ""}
+                      onChange={(event) =>
+                        updateField("nme_endloc_bairro_cdl", event.target.value || null)
+                      }
+                    />
+                  </label>
 
-                <label>
-                  Longitude
-                  <input
-                    type="number"
-                    step="0.000001"
-                    value={form.longitude ?? ""}
-                    onChange={(event) =>
-                      updateField(
-                        "longitude",
-                        event.target.value ? Number(event.target.value) : null
-                      )
-                    }
-                  />
-                </label>
+                  <label>
+                    DES_FINALIDADE
+                    <input
+                      value={form.finalidade}
+                      onChange={(event) => updateField("finalidade", event.target.value)}
+                    />
+                  </label>
 
-                <label>
-                  Area total
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={form.area_total ?? ""}
-                    onChange={(event) =>
-                      updateField(
-                        "area_total",
-                        event.target.value ? Number(event.target.value) : null
-                      )
-                    }
-                  />
-                </label>
+                  <label>
+                    AREA_TERRITORIAL
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.area_total ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "area_total",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
 
-                <label>
-                  Area privativa
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={form.area_privativa ?? ""}
-                    onChange={(event) =>
-                      updateField(
-                        "area_privativa",
-                        event.target.value ? Number(event.target.value) : null
-                      )
-                    }
-                  />
-                </label>
+                  <label>
+                    AREA_CONSTRUIDA
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.area_privativa ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "area_privativa",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    RH_NOME
+                    <input
+                      value={form.rh_nome ?? ""}
+                      onChange={(event) => updateField("rh_nome", event.target.value || null)}
+                    />
+                  </label>
+
+                  <label>
+                    RH_VALOR
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.rh_valor ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "rh_valor",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    COORD_X
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={form.coord_x ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "coord_x",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    COORD_Y
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={form.coord_y ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "coord_y",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    ANO_EXERCICIO
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.ano_exercicio ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "ano_exercicio",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    NUM_VERSAO
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.num_versao ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "num_versao",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    IDF_REG_REGIAO_HOMOGENEA
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.idf_reg_regiao_homogenea ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "idf_reg_regiao_homogenea",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    LATITUDE
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={form.latitude ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "latitude",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    LONGITUDE
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={form.longitude ?? ""}
+                      onChange={(event) =>
+                        updateField(
+                          "longitude",
+                          event.target.value ? Number(event.target.value) : null
+                        )
+                      }
+                    />
+                  </label>
                 </div>
               </div>
             ) : null}
@@ -546,46 +802,153 @@ function App() {
             </div>
             {openSections.outras ? (
               <div className="section-body">
-                <div className="form-grid">
-                <label>
-                  Infra
-                  <select
-                    value={form.infra ?? ""}
-                    onChange={(event) => updateField("infra", event.target.value || null)}
-                  >
-                    <option value="">Selecione</option>
-                    <option value="Minima">Minima</option>
-                    <option value="Basica">Basica</option>
-                    <option value="Intermediaria">Intermediaria</option>
-                    <option value="Completa">Completa</option>
-                  </select>
-                </label>
+                <div className="classification-layout">
+                  <div className="classification-controls">
+                    <div className="classification-row">
+                      <label>
+                        Infra
+                        <select
+                          value={form.infra ?? ""}
+                          onChange={(event) => updateField("infra", event.target.value || null)}
+                        >
+                          <option value="">Selecione</option>
+                          <option value="Minima">Minima</option>
+                          <option value="Basica">Basica</option>
+                          <option value="Intermediaria">Intermediaria</option>
+                          <option value="Completa">Completa</option>
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="secondary classify-btn"
+                        onClick={() => setActiveClassifier("infra")}
+                      >
+                        Classificar
+                      </button>
+                    </div>
 
-                <label>
-                  Padrao
-                  <select
-                    value={form.padrao ?? ""}
-                    onChange={(event) => updateField("padrao", event.target.value || null)}
-                  >
-                    <option value="">Selecione</option>
-                    <option value="Baixo">Baixo</option>
-                    <option value="Normal">Normal</option>
-                    <option value="Normal/Alto">Normal/Alto</option>
-                    <option value="Alto">Alto</option>
-                  </select>
-                </label>
+                    <div className="classification-row">
+                      <label>
+                        Padrao
+                        <select
+                          value={form.padrao ?? ""}
+                          onChange={(event) => updateField("padrao", event.target.value || null)}
+                        >
+                          <option value="">Selecione</option>
+                          <option value="Baixo">Baixo</option>
+                          <option value="Normal">Normal</option>
+                          <option value="Normal/Alto">Normal/Alto</option>
+                          <option value="Alto">Alto</option>
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="secondary classify-btn"
+                        onClick={() => setActiveClassifier("padrao")}
+                      >
+                        Classificar
+                      </button>
+                    </div>
 
-                <label>
-                  Vaga
-                  <select
-                    value={form.vaga ?? ""}
-                    onChange={(event) => updateField("vaga", event.target.value || null)}
-                  >
-                    <option value="">Selecione</option>
-                    <option value="Sim">Sim</option>
-                    <option value="Nao">Nao</option>
-                  </select>
-                </label>
+                    <div className="classification-row">
+                      <label>
+                        Conservacao
+                        <select
+                          value={form.conservacao ?? ""}
+                          onChange={(event) =>
+                            updateField("conservacao", event.target.value || null)
+                          }
+                        >
+                          <option value="">Selecione</option>
+                          {CONSERVACAO_OPTIONS.map((option) => (
+                            <option key={option.categoria} value={option.categoria}>
+                              {option.categoria}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="secondary classify-btn"
+                        onClick={() => setActiveClassifier("conservacao")}
+                      >
+                        Classificar
+                      </button>
+                    </div>
+
+                    <div className="classification-row">
+                      <label>
+                        Vaga
+                        <select
+                          value={form.vaga ?? ""}
+                          onChange={(event) => updateField("vaga", event.target.value || null)}
+                        >
+                          <option value="">Selecione</option>
+                          <option value="Sim">Sim</option>
+                          <option value="Nao - facilidade de estacionamento">
+                            Nao - facilidade de estacionamento
+                          </option>
+                          <option value="Nao - dificuldade de estacionamento">
+                            Nao - dificuldade de estacionamento
+                          </option>
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="secondary classify-btn"
+                        onClick={() => setActiveClassifier("vaga")}
+                      >
+                        Classificar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="criteria-panel">
+                    <div className="criteria-head">
+                      <strong>{activeGuide.titulo}</strong>
+                      <span>{activeGuide.descricao}</span>
+                      <span className="criteria-status">{activeGuide.status}</span>
+                    </div>
+                    <div className="criteria-grid">
+                      {activeGuide.blocos.map((bloco) => (
+                        (() => {
+                          const blocoValor = "valor" in bloco ? bloco.valor : undefined;
+                          return (
+                        <button
+                          key={bloco.titulo}
+                          type="button"
+                          className={`criteria-card${
+                            blocoValor &&
+                            ((activeClassifier === "conservacao" &&
+                              form.conservacao === blocoValor) ||
+                              (activeClassifier === "vaga" && form.vaga === blocoValor))
+                              ? " is-selected"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            if (!blocoValor) {
+                              return;
+                            }
+                            if (activeClassifier === "conservacao") {
+                              updateField("conservacao", blocoValor);
+                            }
+                            if (activeClassifier === "vaga") {
+                              updateField("vaga", blocoValor);
+                            }
+                          }}
+                        >
+                          <strong>{bloco.titulo}</strong>
+                          <ul>
+                            {bloco.itens.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        </button>
+                          );
+                        })()
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -683,6 +1046,7 @@ function App() {
                             {[
                               `Infra: ${property.infra ?? "-"}`,
                               `Padrao: ${property.padrao ?? "-"}`,
+                              `Conservacao: ${property.conservacao ?? "-"}`,
                               `Vaga: ${property.vaga ?? "-"}`,
                             ].join(" | ")}
                           </td>

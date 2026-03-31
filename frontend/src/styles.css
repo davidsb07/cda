@@ -275,6 +275,10 @@ textarea {
   gap: 16px;
 }
 
+.cadastro-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .text-half {
   grid-column: span 1;
 }
@@ -484,6 +488,112 @@ button.secondary {
   line-height: 1.45;
 }
 
+.criteria-panel {
+  padding: 14px;
+  border: 1px solid #dbe6f0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fcfdff, #f5f9fd);
+}
+
+.classification-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.45fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.classification-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.classification-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 10px;
+  align-items: end;
+}
+
+.classify-btn {
+  min-height: 46px;
+}
+
+.criteria-head {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.criteria-head strong {
+  color: #2f4a63;
+  font-family: "Sora", sans-serif;
+  font-size: 0.95rem;
+}
+
+.criteria-head span {
+  color: #5f758a;
+  font-size: 0.84rem;
+}
+
+.criteria-status {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef5ff;
+  color: #45627f !important;
+  font-size: 0.74rem !important;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.criteria-card {
+  border: 1px solid #d2deea;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fbff, #edf3fa);
+  color: #32475d;
+  text-align: left;
+  box-shadow: none;
+}
+
+.criteria-card strong {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-family: "Sora", sans-serif;
+  font-size: 0.92rem;
+}
+
+.criteria-card strong span {
+  color: #6a8096;
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.criteria-card ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: #52687d;
+}
+
+.criteria-card li + li {
+  margin-top: 6px;
+}
+
+.criteria-card.is-selected {
+  border-color: #ffb14d;
+  background: linear-gradient(180deg, #fff6e8, #ffefda);
+  box-shadow: 0 8px 20px rgba(230, 121, 0, 0.14);
+}
+
 .table-wrap {
   overflow: auto;
   margin-top: 16px;
@@ -603,5 +713,15 @@ td:nth-child(4) {
 
   .offer-wide {
     grid-column: span 1;
+  }
+
+  .classification-layout,
+  .classification-row,
+  .criteria-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .classify-btn {
+    width: 100%;
   }
 }

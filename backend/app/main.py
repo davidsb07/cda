@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas
-from .cadastro_base import search_cadastro_base
+from .cadastro_base import ensure_cadastro_base_sqlite, search_cadastro_base
 from .database import BASE_DIR, Base, engine, ensure_property_schema, get_db
 
 
@@ -31,6 +31,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def prepare_cadastro_base():
+    ensure_cadastro_base_sqlite()
 
 
 @app.get("/health")
@@ -66,12 +71,16 @@ def export_properties(db: Session = Depends(get_db)):
         df = pd.DataFrame(
             columns=[
                 "id",
-                "finalidade",
+                "num_bloco",
                 "num_inscricao",
+                "cod_endloc_logradouro",
                 "logradouro",
                 "numero",
                 "unidade",
                 "bairro",
+                "finalidade",
+                "rh_nome",
+                "rh_valor",
                 "area_total",
                 "area_privativa",
                 "finalidade_oferta",
@@ -87,8 +96,8 @@ def export_properties(db: Session = Depends(get_db)):
                 "codigo",
                 "infra",
                 "padrao",
+                "conservacao",
                 "vaga",
-                "origem",
             ]
         )
     df.to_excel(file_path, index=False)

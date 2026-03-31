@@ -15,8 +15,20 @@ Estrutura inicial para um sistema de cadastro de dados imobiliarios com:
 
 ## Bases de dados locais
 
-- `backend/data/base/AUXILIAR_INSCRICOES.txt`: base cadastral auxiliar, somente leitura
+- `backend/data/base/AUXILIAR_INSCRICOES.txt`: base cadastral bruta, somente leitura
+- `backend/data/base/cadastro_base.db`: base otimizada em SQLite, gerada automaticamente a partir do TXT
 - `backend/data/results/`: area reservada para planilhas e arquivos gerados pelo sistema
+
+## Atualizacao da base cadastral
+
+Quando o `AUXILIAR_INSCRICOES.txt` for atualizado, o sistema recria automaticamente o `cadastro_base.db` na proxima inicializacao da API.
+
+Se quiser forcar a reconstrucao manualmente:
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe scripts\rebuild_cadastro_base.py
+```
 
 ## Campos iniciais
 

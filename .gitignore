@@ -14,7 +14,13 @@ backend/uploads/
 backend/data/app.db
 backend/data/results/
 backend/data/base/AUXILIAR_INSCRICOES.txt
+backend/data/base/cadastro_base.db
 cloudflared.log
 cloudflared.err.log
 tmp_mesa_react.html
 tmp_mesa_react.css
+backend-dev.log
+backend-dev.err.log
+frontend-dev.log
+frontend-dev.err.log
+**/__pycache__/

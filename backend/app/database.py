@@ -33,11 +33,20 @@ def ensure_property_schema() -> None:
 
     existing_columns = {column["name"] for column in inspector.get_columns("properties")}
     migrations = {
+        "num_bloco": "ALTER TABLE properties ADD COLUMN num_bloco VARCHAR(30)",
         "num_inscricao": "ALTER TABLE properties ADD COLUMN num_inscricao VARCHAR(30)",
+        "cod_endloc_logradouro": "ALTER TABLE properties ADD COLUMN cod_endloc_logradouro VARCHAR(30)",
         "nme_endloc_logradouro": "ALTER TABLE properties ADD COLUMN nme_endloc_logradouro VARCHAR(150)",
         "num_endloc_endereco": "ALTER TABLE properties ADD COLUMN num_endloc_endereco VARCHAR(30)",
         "num_endloc_unidade": "ALTER TABLE properties ADD COLUMN num_endloc_unidade VARCHAR(30)",
         "nme_endloc_bairro_cdl": "ALTER TABLE properties ADD COLUMN nme_endloc_bairro_cdl VARCHAR(120)",
+        "rh_nome": "ALTER TABLE properties ADD COLUMN rh_nome VARCHAR(80)",
+        "rh_valor": "ALTER TABLE properties ADD COLUMN rh_valor FLOAT",
+        "coord_x": "ALTER TABLE properties ADD COLUMN coord_x FLOAT",
+        "coord_y": "ALTER TABLE properties ADD COLUMN coord_y FLOAT",
+        "ano_exercicio": "ALTER TABLE properties ADD COLUMN ano_exercicio FLOAT",
+        "num_versao": "ALTER TABLE properties ADD COLUMN num_versao FLOAT",
+        "idf_reg_regiao_homogenea": "ALTER TABLE properties ADD COLUMN idf_reg_regiao_homogenea FLOAT",
         "latitude": "ALTER TABLE properties ADD COLUMN latitude FLOAT",
         "longitude": "ALTER TABLE properties ADD COLUMN longitude FLOAT",
         "finalidade_oferta": "ALTER TABLE properties ADD COLUMN finalidade_oferta VARCHAR(50)",
@@ -51,6 +60,7 @@ def ensure_property_schema() -> None:
         "codigo": "ALTER TABLE properties ADD COLUMN codigo VARCHAR(80)",
         "infra": "ALTER TABLE properties ADD COLUMN infra TEXT",
         "padrao": "ALTER TABLE properties ADD COLUMN padrao VARCHAR(80)",
+        "conservacao": "ALTER TABLE properties ADD COLUMN conservacao VARCHAR(80)",
         "vaga": "ALTER TABLE properties ADD COLUMN vaga VARCHAR(80)",
     }
 

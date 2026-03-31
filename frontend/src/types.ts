@@ -2,11 +2,20 @@ export type Property = {
   id: number;
   titulo: string | null;
   finalidade: string;
+  num_bloco: string | null;
   num_inscricao: string | null;
+  cod_endloc_logradouro: string | null;
   nme_endloc_logradouro: string | null;
   num_endloc_endereco: string | null;
   num_endloc_unidade: string | null;
   nme_endloc_bairro_cdl: string | null;
+  rh_nome: string | null;
+  rh_valor: number | null;
+  coord_x: number | null;
+  coord_y: number | null;
+  ano_exercicio: number | null;
+  num_versao: number | null;
+  idf_reg_regiao_homogenea: number | null;
   area_total: number | null;
   area_privativa: number | null;
   finalidade_oferta: string | null;
@@ -22,6 +31,7 @@ export type Property = {
   codigo: string | null;
   infra: string | null;
   padrao: string | null;
+  conservacao: string | null;
   vaga: string | null;
   origem: string;
 };
@@ -36,12 +46,21 @@ export type SpreadsheetPreview = {
 };
 
 export type CadastroBaseRecord = {
+  num_bloco: string | null;
   num_inscricao: string;
+  cod_endloc_logradouro: string | null;
   nme_endloc_logradouro: string | null;
   num_endloc_endereco: string | null;
   num_endloc_unidade: string | null;
   nme_endloc_bairro_cdl: string | null;
   des_finalidade: string | null;
+  rh_nome: string | null;
+  rh_valor: number | null;
+  coord_x: number | null;
+  coord_y: number | null;
+  ano_exercicio: number | null;
+  num_versao: number | null;
+  idf_reg_regiao_homogenea: number | null;
   area_territorial: number | null;
   area_construida: number | null;
   latitude: number | null;
