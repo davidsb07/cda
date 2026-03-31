@@ -1,0 +1,17 @@
+.git
+.gitignore
+frontend/node_modules
+frontend/dist
+backend/.venv
+backend/data/results
+backend/data/app.db
+backend/data/base/cadastro_base.db
+backend-dev.log
+backend-dev.err.log
+frontend-dev.log
+frontend-dev.err.log
+cloudflared.log
+cloudflared.err.log
+tmp_mesa_react.html
+tmp_mesa_react.css
+**/__pycache__/

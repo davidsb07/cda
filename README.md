@@ -1,3 +1,12 @@
+---
+title: cda
+emoji: 🏢
+colorFrom: orange
+colorTo: blue
+sdk: docker
+app_port: 7860
+---
+
 # Cadastro Imobiliario
 
 Estrutura inicial para um sistema de cadastro de dados imobiliarios com:
@@ -62,6 +71,14 @@ Set-ExecutionPolicy -Scope Process Bypass
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:8000`
 - Docs da API: `http://localhost:8000/docs`
+
+## Deploy no Hugging Face Space
+
+O projeto esta preparado para rodar em `Docker Space`, com o frontend buildado e servido pelo backend em porta unica.
+
+- Space: `https://huggingface.co/spaces/ESJL/cda`
+- Porta exposta no container: `7860`
+- Arquivo principal de deploy: `Dockerfile`
 
 ## Proximos passos
 

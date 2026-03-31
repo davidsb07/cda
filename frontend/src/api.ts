@@ -5,7 +5,7 @@ import type {
   SpreadsheetPreview
 } from "./types";
 
-const API_URL = "http://localhost:8000";
+const API_URL = window.location.port === "5173" ? "http://localhost:8000" : "";
 
 export async function fetchProperties(): Promise<Property[]> {
   const response = await fetch(`${API_URL}/properties`);

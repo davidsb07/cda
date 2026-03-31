@@ -5,7 +5,8 @@ from pathlib import Path
 import pandas as pd
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas
@@ -17,6 +18,8 @@ Base.metadata.create_all(bind=engine)
 ensure_property_schema()
 RESULTS_DIR = BASE_DIR / "data" / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+FRONTEND_DIST_DIR = BASE_DIR.parent / "frontend" / "dist"
+FRONTEND_ASSETS_DIR = FRONTEND_DIST_DIR / "assets"
 
 app = FastAPI(
     title="Cadastro Imobiliario API",
@@ -150,3 +153,27 @@ async def import_preview(file: UploadFile = File(...)):
         rows=preview_rows,
         total_rows=len(df),
     )
+
+
+if FRONTEND_ASSETS_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_ASSETS_DIR), name="assets")
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def serve_frontend_index():
+    if FRONTEND_DIST_DIR.exists():
+        return FileResponse(FRONTEND_DIST_DIR / "index.html")
+    raise HTTPException(status_code=404, detail="Frontend build nao encontrado.")
+
+
+@app.get("/{full_path:path}", response_class=HTMLResponse, include_in_schema=False)
+def serve_frontend_app(full_path: str):
+    if full_path.startswith(("properties", "cadastro-base", "health", "docs", "openapi.json")):
+        raise HTTPException(status_code=404, detail="Recurso nao encontrado.")
+
+    requested_path = FRONTEND_DIST_DIR / full_path
+    if FRONTEND_DIST_DIR.exists() and requested_path.is_file():
+        return FileResponse(requested_path)
+    if FRONTEND_DIST_DIR.exists():
+        return FileResponse(FRONTEND_DIST_DIR / "index.html")
+    raise HTTPException(status_code=404, detail="Frontend build nao encontrado.")
