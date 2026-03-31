@@ -7,6 +7,9 @@ from .schemas import CadastroBaseRecord
 
 BASE_FILE = Path(__file__).resolve().parent.parent / "data" / "base" / "AUXILIAR_INSCRICOES.txt"
 SQLITE_FILE = Path(__file__).resolve().parent.parent / "data" / "base" / "cadastro_base.db"
+SQLITE_SPACE_FILE = (
+    Path(__file__).resolve().parent.parent / "data" / "base" / "cadastro_base_space_filtrada.db"
+)
 BASE_COLUMNS = [
     "NUM_BLOCO",
     "NUM_INSCRICAO",
@@ -28,6 +31,49 @@ BASE_COLUMNS = [
     "LATITUDE",
     "LONGITUDE",
 ]
+
+BASE_REQUIRED_COLUMNS = {
+    "num_bloco",
+    "num_inscricao",
+    "cod_endloc_logradouro",
+    "nme_endloc_logradouro",
+    "num_endloc_endereco",
+    "num_endloc_unidade",
+    "nme_endloc_bairro_cdl",
+    "des_finalidade",
+    "rh_nome",
+    "rh_valor",
+    "coord_x",
+    "coord_y",
+    "ano_exercicio",
+    "num_versao",
+    "idf_reg_regiao_homogenea",
+    "area_territorial",
+    "area_construida",
+    "latitude",
+    "longitude",
+    "search_inscricao",
+    "search_address",
+}
+
+SPACE_REQUIRED_COLUMNS = {
+    "num_bloco",
+    "num_inscricao",
+    "cod_endloc_logradouro",
+    "nme_endloc_logradouro",
+    "num_endloc_endereco",
+    "num_endloc_unidade",
+    "nme_endloc_bairro_cdl",
+    "des_finalidade",
+    "rh_nome",
+    "rh_valor",
+    "area_territorial",
+    "area_construida",
+    "latitude",
+    "longitude",
+    "search_inscricao",
+    "search_address",
+}
 
 
 def _parse_decimal(value: str | None) -> float | None:
@@ -90,58 +136,62 @@ def _to_record(row: dict[str, str | None]) -> CadastroBaseRecord:
 
 
 def _connect_sqlite() -> sqlite3.Connection:
-    connection = sqlite3.connect(SQLITE_FILE)
+    connection = sqlite3.connect(_get_active_sqlite_file())
     connection.row_factory = sqlite3.Row
     return connection
 
 
+def _get_sqlite_columns(path: Path) -> set[str]:
+    connection = sqlite3.connect(path)
+    connection.row_factory = sqlite3.Row
+    try:
+        return {row["name"] for row in connection.execute("PRAGMA table_info(cadastro_base)").fetchall()}
+    finally:
+        connection.close()
+
+
+def _get_active_sqlite_file() -> Path:
+    if SQLITE_SPACE_FILE.exists():
+        try:
+            existing_columns = _get_sqlite_columns(SQLITE_SPACE_FILE)
+            if SPACE_REQUIRED_COLUMNS.issubset(existing_columns):
+                return SQLITE_SPACE_FILE
+        except sqlite3.DatabaseError:
+            pass
+    return SQLITE_FILE
+
+
 def _needs_rebuild() -> bool:
+    if SQLITE_SPACE_FILE.exists():
+        try:
+            existing_columns = _get_sqlite_columns(SQLITE_SPACE_FILE)
+            if SPACE_REQUIRED_COLUMNS.issubset(existing_columns):
+                return False
+        except sqlite3.DatabaseError:
+            pass
+
     if not BASE_FILE.exists():
         raise FileNotFoundError(f"Base auxiliar nao encontrada em {BASE_FILE}")
     if not SQLITE_FILE.exists():
         return True
     try:
-        with _connect_sqlite() as connection:
-            existing_columns = {
-                row["name"]
-                for row in connection.execute("PRAGMA table_info(cadastro_base)").fetchall()
-            }
+        existing_columns = _get_sqlite_columns(SQLITE_FILE)
     except sqlite3.DatabaseError:
         return True
 
-    required_columns = {
-        "num_bloco",
-        "num_inscricao",
-        "cod_endloc_logradouro",
-        "nme_endloc_logradouro",
-        "num_endloc_endereco",
-        "num_endloc_unidade",
-        "nme_endloc_bairro_cdl",
-        "des_finalidade",
-        "rh_nome",
-        "rh_valor",
-        "coord_x",
-        "coord_y",
-        "ano_exercicio",
-        "num_versao",
-        "idf_reg_regiao_homogenea",
-        "area_territorial",
-        "area_construida",
-        "latitude",
-        "longitude",
-        "search_inscricao",
-        "search_address",
-    }
-    if not required_columns.issubset(existing_columns):
+    if not BASE_REQUIRED_COLUMNS.issubset(existing_columns):
         return True
     return SQLITE_FILE.stat().st_mtime < BASE_FILE.stat().st_mtime
 
 
 def ensure_cadastro_base_sqlite(force_rebuild: bool = False) -> tuple[Path, int]:
     if not force_rebuild and not _needs_rebuild():
-        with _connect_sqlite() as connection:
+        active_file = _get_active_sqlite_file()
+        connection = sqlite3.connect(active_file)
+        connection.row_factory = sqlite3.Row
+        with connection:
             row = connection.execute("SELECT COUNT(*) AS total FROM cadastro_base").fetchone()
-            return SQLITE_FILE, int(row["total"])
+            return active_file, int(row["total"])
 
     SQLITE_FILE.parent.mkdir(parents=True, exist_ok=True)
     temp_db = SQLITE_FILE.with_suffix(".tmp")
@@ -286,29 +336,38 @@ def search_cadastro_base(mode: str, query: str, limit: int = 20) -> list[Cadastr
     ensure_cadastro_base_sqlite()
 
     with _connect_sqlite() as connection:
+        available_columns = _get_sqlite_columns(_get_active_sqlite_file())
+        select_candidates = [
+            "num_bloco",
+            "num_inscricao",
+            "cod_endloc_logradouro",
+            "nme_endloc_logradouro",
+            "num_endloc_endereco",
+            "num_endloc_unidade",
+            "nme_endloc_bairro_cdl",
+            "des_finalidade",
+            "rh_nome",
+            "rh_valor",
+            "coord_x",
+            "coord_y",
+            "ano_exercicio",
+            "num_versao",
+            "idf_reg_regiao_homogenea",
+            "area_territorial",
+            "area_construida",
+            "latitude",
+            "longitude",
+        ]
+        selected_columns = ",\n                    ".join(
+            column for column in select_candidates if column in available_columns
+        )
         if mode == "inscricao":
             rows = connection.execute(
                 """
                 SELECT
-                    num_bloco,
-                    num_inscricao,
-                    cod_endloc_logradouro,
-                    nme_endloc_logradouro,
-                    num_endloc_endereco,
-                    num_endloc_unidade,
-                    nme_endloc_bairro_cdl,
-                    des_finalidade,
-                    rh_nome,
-                    rh_valor,
-                    coord_x,
-                    coord_y,
-                    ano_exercicio,
-                    num_versao,
-                    idf_reg_regiao_homogenea,
-                    area_territorial,
-                    area_construida,
-                    latitude,
-                    longitude
+                    """
+                + selected_columns
+                + """
                 FROM cadastro_base
                 WHERE search_inscricao LIKE ?
                 LIMIT ?
@@ -323,25 +382,7 @@ def search_cadastro_base(mode: str, query: str, limit: int = 20) -> list[Cadastr
             rows = connection.execute(
                 f"""
                 SELECT
-                    num_bloco,
-                    num_inscricao,
-                    cod_endloc_logradouro,
-                    nme_endloc_logradouro,
-                    num_endloc_endereco,
-                    num_endloc_unidade,
-                    nme_endloc_bairro_cdl,
-                    des_finalidade,
-                    rh_nome,
-                    rh_valor,
-                    coord_x,
-                    coord_y,
-                    ano_exercicio,
-                    num_versao,
-                    idf_reg_regiao_homogenea,
-                    area_territorial,
-                    area_construida,
-                    latitude,
-                    longitude
+                    {selected_columns}
                 FROM cadastro_base
                 WHERE {where_clause}
                 LIMIT ?

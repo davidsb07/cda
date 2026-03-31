@@ -5,6 +5,7 @@ __pycache__/
 *.pyd
 *.sqlite3
 *.db
+!backend/data/base/cadastro_base_space_filtrada.db
 .pytest_cache/
 .mypy_cache/
 node_modules/
