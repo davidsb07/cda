@@ -39,6 +39,11 @@ jobs:
           git checkout -b main
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+          git lfs track "*.png"
+          git lfs track "*.jpg"
+          git lfs track "*.jpeg"
+          git lfs track "*.webp"
+          git add .gitattributes
           git remote add origin https://ESJL:$HF_TOKEN@huggingface.co/spaces/ESJL/cda
           git add .
           git commit -m "Sync from GitHub ${GITHUB_SHA}"
