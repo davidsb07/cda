@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -13,6 +14,7 @@ from . import crud, models, schemas
 from .cadastro_base import ensure_cadastro_base_sqlite, search_cadastro_base
 from .database import BASE_DIR, Base, engine, ensure_property_schema, get_db
 
+logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 ensure_property_schema()
@@ -38,7 +40,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 def prepare_cadastro_base():
-    ensure_cadastro_base_sqlite()
+    try:
+        ensure_cadastro_base_sqlite()
+    except FileNotFoundError:
+        logger.warning("Base auxiliar nao encontrada. A busca cadastral ficara indisponivel.")
 
 
 @app.get("/health")
