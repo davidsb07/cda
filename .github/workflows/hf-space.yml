@@ -43,6 +43,7 @@ jobs:
           git lfs track "*.jpg"
           git lfs track "*.jpeg"
           git lfs track "*.webp"
+          git lfs track "*.db"
           git add .gitattributes
           git remote add origin https://ESJL:$HF_TOKEN@huggingface.co/spaces/ESJL/cda
           git add .
