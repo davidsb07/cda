@@ -221,6 +221,26 @@ textarea {
   display: none;
 }
 
+.sequence-panel:focus-within {
+  border-color: rgba(47, 128, 207, 0.44);
+  background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+  box-shadow: 0 12px 30px rgba(47, 128, 207, 0.14);
+}
+
+.sequence-panel:focus-within::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  width: 4px;
+  background: linear-gradient(180deg, var(--support), var(--accent));
+}
+
+.sequence-panel:focus-within > * {
+  position: relative;
+  z-index: 1;
+}
+
 .sequence-head {
   position: relative;
   z-index: 1;
