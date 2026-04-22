@@ -45,7 +45,7 @@ jobs:
           git lfs track "*.webp"
           git lfs track "*.db"
           git add .gitattributes
-          git remote add origin https://ESJL:$HF_TOKEN@huggingface.co/spaces/ESJL/cda
+          git remote add origin https://DavidSB:$HF_TOKEN@huggingface.co/spaces/DavidSB/cientifico
           git add .
           git commit -m "Sync from GitHub ${GITHUB_SHA}"
           git push --force origin main
