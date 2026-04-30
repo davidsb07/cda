@@ -5,7 +5,7 @@ import type {
   SpreadsheetPreview
 } from "./types";
 
-const API_URL = window.location.port === "5173" ? "http://localhost:8000" : "";
+const API_URL = window.location.port === "5173" ? "http://localhost:8001" : "";
 
 export async function fetchProperties(): Promise<Property[]> {
   const response = await fetch(`${API_URL}/properties`);
@@ -25,7 +25,8 @@ export async function createProperty(payload: PropertyDraft): Promise<Property> 
   });
 
   if (!response.ok) {
-    throw new Error("Falha ao salvar imovel.");
+    const errorText = await response.text();
+    throw new Error(errorText || "Falha ao salvar imovel.");
   }
 
   return response.json();

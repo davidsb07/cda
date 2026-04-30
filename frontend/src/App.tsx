@@ -144,7 +144,9 @@ const initialForm: PropertyDraft = {
   ano_exercicio: null,
   num_versao: null,
   idf_reg_regiao_homogenea: null,
+  area_total_detalhe: null,
   area_total: null,
+  area_privativa_detalhe: null,
   area_privativa: null,
   finalidade_oferta: null,
   area_total_oferta: null,
@@ -164,9 +166,87 @@ const initialForm: PropertyDraft = {
   origem: "manual",
 };
 
+function joinUnique(values: Array<string | null | undefined>): string | null {
+  const uniqueValues = Array.from(
+    new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value)))
+  );
+  return uniqueValues.length > 0 ? uniqueValues.join(" | ") : null;
+}
+
+function sumValues(values: Array<number | null | undefined>): number | null {
+  const validValues = values.filter((value): value is number => typeof value === "number");
+  return validValues.length > 0
+    ? Number(validValues.reduce((total, value) => total + value, 0).toFixed(2))
+    : null;
+}
+
+function joinNumbers(values: Array<number | null | undefined>): string | null {
+  const formattedValues = values
+    .filter((value): value is number => typeof value === "number")
+    .map((value) => String(value));
+  return formattedValues.length > 0 ? formattedValues.join(" | ") : null;
+}
+
+function firstValue<T>(values: Array<T | null | undefined>): T | null {
+  const found = values.find((value): value is T => value !== null && value !== undefined);
+  return found ?? null;
+}
+
+function buildCadastroFields(records: CadastroBaseRecord[]): Pick<
+  PropertyDraft,
+  | "finalidade"
+  | "num_bloco"
+  | "num_inscricao"
+  | "cod_endloc_logradouro"
+  | "nme_endloc_logradouro"
+  | "num_endloc_endereco"
+  | "num_endloc_unidade"
+  | "nme_endloc_bairro_cdl"
+  | "rh_nome"
+  | "rh_valor"
+  | "coord_x"
+  | "coord_y"
+  | "ano_exercicio"
+  | "num_versao"
+  | "idf_reg_regiao_homogenea"
+  | "area_total_detalhe"
+  | "area_total"
+  | "area_privativa_detalhe"
+  | "area_privativa"
+  | "latitude"
+  | "longitude"
+  | "origem"
+> {
+  return {
+    finalidade: joinUnique(records.map((record) => record.des_finalidade)) ?? "RESIDENCIAL",
+    num_bloco: joinUnique(records.map((record) => record.num_bloco)),
+    num_inscricao: joinUnique(records.map((record) => record.num_inscricao)),
+    cod_endloc_logradouro: joinUnique(records.map((record) => record.cod_endloc_logradouro)),
+    nme_endloc_logradouro: joinUnique(records.map((record) => record.nme_endloc_logradouro)),
+    num_endloc_endereco: joinUnique(records.map((record) => record.num_endloc_endereco)),
+    num_endloc_unidade: joinUnique(records.map((record) => record.num_endloc_unidade)),
+    nme_endloc_bairro_cdl: joinUnique(records.map((record) => record.nme_endloc_bairro_cdl)),
+    rh_nome: firstValue(records.map((record) => record.rh_nome)),
+    rh_valor: firstValue(records.map((record) => record.rh_valor)),
+    coord_x: firstValue(records.map((record) => record.coord_x)),
+    coord_y: firstValue(records.map((record) => record.coord_y)),
+    ano_exercicio: firstValue(records.map((record) => record.ano_exercicio)),
+    num_versao: firstValue(records.map((record) => record.num_versao)),
+    idf_reg_regiao_homogenea: firstValue(records.map((record) => record.idf_reg_regiao_homogenea)),
+    area_total_detalhe: joinNumbers(records.map((record) => record.area_territorial)),
+    area_total: sumValues(records.map((record) => record.area_territorial)),
+    area_privativa_detalhe: joinNumbers(records.map((record) => record.area_construida)),
+    area_privativa: sumValues(records.map((record) => record.area_construida)),
+    latitude: firstValue(records.map((record) => record.latitude)),
+    longitude: firstValue(records.map((record) => record.longitude)),
+    origem: "cadastro_base"
+  };
+}
+
 function App() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [form, setForm] = useState<PropertyDraft>(initialForm);
+  const [cadastroRecords, setCadastroRecords] = useState<CadastroBaseRecord[]>([]);
   const [searchMode, setSearchMode] = useState<"inscricao" | "endereco">("inscricao");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CadastroBaseRecord[]>([]);
@@ -207,31 +287,56 @@ function App() {
   }
 
   function applyCadastroBase(record: CadastroBaseRecord) {
-    setForm((current) => ({
-      ...current,
-      finalidade: record.des_finalidade || current.finalidade,
-      num_bloco: record.num_bloco,
-      num_inscricao: record.num_inscricao,
-      cod_endloc_logradouro: record.cod_endloc_logradouro,
-      nme_endloc_logradouro: record.nme_endloc_logradouro,
-      num_endloc_endereco: record.num_endloc_endereco,
-      num_endloc_unidade: record.num_endloc_unidade,
-      nme_endloc_bairro_cdl: record.nme_endloc_bairro_cdl,
-      rh_nome: record.rh_nome,
-      rh_valor: record.rh_valor,
-      coord_x: record.coord_x,
-      coord_y: record.coord_y,
-      ano_exercicio: record.ano_exercicio,
-      num_versao: record.num_versao,
-      idf_reg_regiao_homogenea: record.idf_reg_regiao_homogenea,
-      area_total: record.area_territorial,
-      area_privativa: record.area_construida,
-      latitude: record.latitude,
-      longitude: record.longitude,
-      origem: "cadastro_base"
-    }));
-    setMessage("Dados cadastrais aplicados ao formulario. Todos os campos continuam editaveis.");
+    setCadastroRecords((current) => {
+      const alreadyAdded = current.some((item) => item.num_inscricao === record.num_inscricao);
+      const nextRecords = alreadyAdded ? current : [...current, record];
+      setForm((formState) => ({
+        ...formState,
+        ...buildCadastroFields(nextRecords)
+      }));
+      return nextRecords;
+    });
+    setMessage("Imovel adicionado ao cadastro da oferta. Os campos continuam editaveis.");
     setError("");
+  }
+
+  function removeCadastroRecord(numInscricao: string) {
+    setCadastroRecords((current) => {
+      const nextRecords = current.filter((record) => record.num_inscricao !== numInscricao);
+      setForm((formState) =>
+        nextRecords.length > 0
+          ? {
+              ...formState,
+              ...buildCadastroFields(nextRecords)
+            }
+          : {
+              ...formState,
+              finalidade: initialForm.finalidade,
+              num_bloco: null,
+              num_inscricao: null,
+              cod_endloc_logradouro: null,
+              nme_endloc_logradouro: null,
+              num_endloc_endereco: null,
+              num_endloc_unidade: null,
+              nme_endloc_bairro_cdl: null,
+              rh_nome: null,
+              rh_valor: null,
+              coord_x: null,
+              coord_y: null,
+              ano_exercicio: null,
+              num_versao: null,
+              idf_reg_regiao_homogenea: null,
+              area_total_detalhe: null,
+              area_total: null,
+              area_privativa_detalhe: null,
+              area_privativa: null,
+              latitude: null,
+              longitude: null,
+              origem: "manual"
+            }
+      );
+      return nextRecords;
+    });
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -243,6 +348,7 @@ function App() {
       const created = await createProperty(form);
       setProperties((current) => [created, ...current]);
       setForm(initialForm);
+      setCadastroRecords([]);
       setMessage("Imovel cadastrado com sucesso.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar cadastro.");
@@ -398,8 +504,40 @@ function App() {
             {openSections.cadastro ? (
               <div className="section-body">
                 <div className="form-banner">
-                  Os dados encontrados podem ser ajustados livremente antes do salvamento. A base
-                  auxiliar permanece intacta.
+                  Adicione uma ou mais inscricoes para a mesma oferta. A planilha final mantem uma
+                  linha por oferta, com os dados cadastrais consolidados.
+                </div>
+                <div className="selected-cadastros">
+                  <div className="selected-cadastros-head">
+                    <strong>Imoveis desta oferta</strong>
+                    <span>{cadastroRecords.length} selecionado(s)</span>
+                  </div>
+                  {cadastroRecords.length === 0 ? (
+                    <p className="muted">Nenhuma inscricao adicionada ainda.</p>
+                  ) : (
+                    <div className="selected-cadastro-list">
+                      {cadastroRecords.map((record) => (
+                        <div className="selected-cadastro-item" key={record.num_inscricao}>
+                          <div>
+                            <strong>{record.num_inscricao}</strong>
+                            <span>
+                              {[record.nme_endloc_logradouro, record.num_endloc_endereco]
+                                .filter(Boolean)
+                                .join(", ") || "-"}
+                              {record.num_endloc_unidade ? ` / ${record.num_endloc_unidade}` : ""}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() => removeCadastroRecord(record.num_inscricao)}
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="form-grid cadastro-grid">
                   <label>
@@ -477,7 +615,17 @@ function App() {
                   </label>
 
                   <label>
-                    AREA_TERRITORIAL
+                    AREA_TERRITORIAL_SEPARADA
+                    <input
+                      value={form.area_total_detalhe ?? ""}
+                      onChange={(event) =>
+                        updateField("area_total_detalhe", event.target.value || null)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    AREA_TERRITORIAL_SOMA
                     <input
                       type="number"
                       step="0.01"
@@ -492,7 +640,17 @@ function App() {
                   </label>
 
                   <label>
-                    AREA_CONSTRUIDA
+                    AREA_CONSTRUIDA_SEPARADA
+                    <input
+                      value={form.area_privativa_detalhe ?? ""}
+                      onChange={(event) =>
+                        updateField("area_privativa_detalhe", event.target.value || null)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    AREA_CONSTRUIDA_SOMA
                     <input
                       type="number"
                       step="0.01"
@@ -523,81 +681,6 @@ function App() {
                       onChange={(event) =>
                         updateField(
                           "rh_valor",
-                          event.target.value ? Number(event.target.value) : null
-                        )
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    COORD_X
-                    <input
-                      type="number"
-                      step="0.000001"
-                      value={form.coord_x ?? ""}
-                      onChange={(event) =>
-                        updateField(
-                          "coord_x",
-                          event.target.value ? Number(event.target.value) : null
-                        )
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    COORD_Y
-                    <input
-                      type="number"
-                      step="0.000001"
-                      value={form.coord_y ?? ""}
-                      onChange={(event) =>
-                        updateField(
-                          "coord_y",
-                          event.target.value ? Number(event.target.value) : null
-                        )
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    ANO_EXERCICIO
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={form.ano_exercicio ?? ""}
-                      onChange={(event) =>
-                        updateField(
-                          "ano_exercicio",
-                          event.target.value ? Number(event.target.value) : null
-                        )
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    NUM_VERSAO
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={form.num_versao ?? ""}
-                      onChange={(event) =>
-                        updateField(
-                          "num_versao",
-                          event.target.value ? Number(event.target.value) : null
-                        )
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    IDF_REG_REGIAO_HOMOGENEA
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={form.idf_reg_regiao_homogenea ?? ""}
-                      onChange={(event) =>
-                        updateField(
-                          "idf_reg_regiao_homogenea",
                           event.target.value ? Number(event.target.value) : null
                         )
                       }
@@ -770,16 +853,6 @@ function App() {
                   />
                 </label>
 
-                <label>
-                  Origem
-                  <select
-                    value={form.origem}
-                    onChange={(event) => updateField("origem", event.target.value)}
-                  >
-                    <option value="manual">manual</option>
-                    <option value="cadastro_base">cadastro_base</option>
-                  </select>
-                </label>
                 </div>
               </div>
             ) : null}
@@ -997,7 +1070,7 @@ function App() {
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>Inscricao</th>
+                      <th>Inscricao(s)</th>
                       <th>Endereco</th>
                       <th>Cadastro</th>
                       <th>Oferta</th>
@@ -1029,8 +1102,12 @@ function App() {
                           <td>
                             {[
                               `Finalidade: ${property.finalidade ?? "-"}`,
-                              `Area total: ${property.area_total ?? "-"}`,
-                              `Area privativa: ${property.area_privativa ?? "-"}`,
+                              `Area total: ${property.area_total_detalhe ?? "-"} | Soma: ${
+                                property.area_total ?? "-"
+                              }`,
+                              `Area privativa: ${property.area_privativa_detalhe ?? "-"} | Soma: ${
+                                property.area_privativa ?? "-"
+                              }`,
                               `Bairro: ${property.nme_endloc_bairro_cdl ?? "-"}`,
                             ].join(" | ")}
                           </td>

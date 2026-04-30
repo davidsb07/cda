@@ -47,6 +47,8 @@ def ensure_property_schema() -> None:
         "ano_exercicio": "ALTER TABLE properties ADD COLUMN ano_exercicio FLOAT",
         "num_versao": "ALTER TABLE properties ADD COLUMN num_versao FLOAT",
         "idf_reg_regiao_homogenea": "ALTER TABLE properties ADD COLUMN idf_reg_regiao_homogenea FLOAT",
+        "area_total_detalhe": "ALTER TABLE properties ADD COLUMN area_total_detalhe VARCHAR(1000)",
+        "area_privativa_detalhe": "ALTER TABLE properties ADD COLUMN area_privativa_detalhe VARCHAR(1000)",
         "latitude": "ALTER TABLE properties ADD COLUMN latitude FLOAT",
         "longitude": "ALTER TABLE properties ADD COLUMN longitude FLOAT",
         "finalidade_oferta": "ALTER TABLE properties ADD COLUMN finalidade_oferta VARCHAR(50)",

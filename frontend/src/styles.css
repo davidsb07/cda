@@ -350,6 +350,62 @@ textarea {
   font-size: 0.88rem;
 }
 
+.selected-cadastros {
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid #dbe6f1;
+  border-radius: 10px;
+  background: #f8fbfe;
+}
+
+.selected-cadastros-head,
+.selected-cadastro-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.selected-cadastros-head {
+  margin-bottom: 10px;
+  color: #39536d;
+}
+
+.selected-cadastros-head span {
+  color: #66788a;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.selected-cadastro-list {
+  display: grid;
+  gap: 10px;
+}
+
+.selected-cadastro-item {
+  padding: 10px 12px;
+  border: 1px solid #d6e2ec;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.selected-cadastro-item div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.selected-cadastro-item span {
+  color: #66788a;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.selected-cadastro-item button {
+  max-width: 120px;
+  flex: 0 0 120px;
+}
+
 label {
   display: grid;
   gap: 8px;

@@ -16,7 +16,9 @@ export type Property = {
   ano_exercicio: number | null;
   num_versao: number | null;
   idf_reg_regiao_homogenea: number | null;
+  area_total_detalhe: string | null;
   area_total: number | null;
+  area_privativa_detalhe: string | null;
   area_privativa: number | null;
   finalidade_oferta: string | null;
   area_total_oferta: number | null;
